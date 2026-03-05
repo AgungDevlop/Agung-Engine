@@ -89,7 +89,7 @@ jobs:
           if [ "${{ inputs.mode }}" == "code" ]; then
               jq '.appId = "${{ inputs.packageName }}" | .appName = "${{ inputs.appName }}" | .webDir = "www" | del(.server.url)' capacitor.config.json > tmp.json && mv tmp.json capacitor.config.json
           else
-              jq '.appId = "${{ inputs.packageName }}" | .appName = "${{ inputs.appName }}" | .webDir = "www" | .server = {"url": "${{ inputs.url }}", "cleartext": true}' capacitor.config.json > tmp.json && mv tmp.json capacitor.config.json
+              jq '.appId = "${{ inputs.packageName }}" | .appName = "${{ inputs.appName }}" | .webDir = "www" | .server = {"url": "${{ inputs.url }}", "cleartext": true, "allowNavigation": ["*"]}' capacitor.config.json > tmp.json && mv tmp.json capacitor.config.json
           fi
           
           # 1. SAPU BERSIH PACKAGE NAME LAMA DI SELURUH FILE PROJECT
@@ -102,8 +102,43 @@ jobs:
               NEW_DIR="android/app/src/main/java/$(echo ${{ inputs.packageName }} | tr '.' '/')"
               mkdir -p "$NEW_DIR"
               if [ "$MAIN_ACTIVITY" != "$NEW_DIR/MainActivity.java" ]; then
-                  mv "$MAIN_ACTIVITY" "$NEW_DIR/"
+                  rm "$MAIN_ACTIVITY"
               fi
+              
+              cat << 'EOF' > "$NEW_DIR/MainActivity.java"
+          package ${{ inputs.packageName }};
+
+          import com.getcapacitor.BridgeActivity;
+          import android.webkit.WebView;
+          import android.widget.Toast;
+          import android.os.Handler;
+          import android.os.Looper;
+
+          public class MainActivity extends BridgeActivity {
+              private boolean doubleBackToExitPressedOnce = false;
+
+              @Override
+              public void onBackPressed() {
+                  WebView webView = this.bridge.getWebView();
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      if (doubleBackToExitPressedOnce) {
+                          super.onBackPressed();
+                          return;
+                      }
+                      this.doubleBackToExitPressedOnce = true;
+                      Toast.makeText(this, "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                      new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                          @Override
+                          public void run() {
+                              doubleBackToExitPressedOnce = false;
+                          }
+                      }, 2000);
+                  }
+              }
+          }
+          EOF
           fi
           
           # 2. SAPU BERSIH NAMA APLIKASI (App Info & Home Screen Launcher)
