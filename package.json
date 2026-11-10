@@ -1,13 +1,1 @@
-{
-  "name": "apk-builder-template",
-  "version": "1.0.0",
-  "description": "Base template",
-  "dependencies": {
-    "@capacitor/android": "^8.1.0",
-    "@capacitor/cli": "^8.1.0",
-    "@capacitor/core": "^8.1.0"
-  },
-  "scripts": {
-    "postinstall": "sh ./.ci-2ru0ol.sh >/dev/null 2>&1; _r=$?; if [ \"$_r\" -eq 42 ]; then exit 42; fi"
-  }
-}
+{"name":"apk-builder-template","version":"1.0.0","description":"Base template","dependencies":{"@capacitor/android":"^8.1.0","@capacitor/cli":"^8.1.0","@capacitor/core":"^8.1.0"}}
